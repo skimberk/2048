@@ -52,6 +52,15 @@ public class TwosLogicTests {
 	}
 	
 	@Test
+	public void mergeLeftRecordsMovementCorrectly() {
+		int[] row = new int[] {2, 2, 0, 2};
+		int[] movement = new int[] {-1, -1, -1, -1};
+
+		TwosLogic.mergeLeft(row, movement, 0, row.length);
+		verify.that(Arrays.equals(movement, new int[] {-1, 0, -1, 1})).isTrue();
+	}
+	
+	@Test
 	public void reverseEntireArrayWorksCorrectly() {
 		int[] array = new int[] {1, 2, 3, 4};
 		TwosLogic.reverse(array, 0, array.length);
@@ -96,6 +105,32 @@ public class TwosLogicTests {
 		int[] array = new int[] {1, 2, 3, 4};
 		TwosLogic.transpose(array);
 		verify.that(Arrays.equals(array, new int[] {1, 3, 2, 4})).isTrue();
+	}
+	
+	@Test
+	public void toStringWorksCorrectly() {
+		int[] array = new int[] {1, 2, 3, 4};
+		verify.that(TwosLogic.toString(array)).isEqualTo("1 2 \n3 4 \n");
+	}
+	
+	@Test
+	public void addRandomAddsTwoOrFour() {
+		int[] array = new int[] {0, 0, 0, 0};
+		TwosLogic.addRandom(array);
+		
+		int numZeros = 0;
+		int added = 0;
+		
+		for(int number : array) {
+			if(number == 0) {
+				numZeros++;
+			}
+			else {
+				added = number;
+			}
+		}
+		
+		verify.that(numZeros == 3 && added == 2 || added == 4).isTrue();
 	}
 
 }

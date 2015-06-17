@@ -242,16 +242,4 @@ public class TwosLogic {
 		
 		return coords;
 	}
-	
-	public static void main(String[] args) {
-		int[] numbers = {2, 2, 2, 4};
-		int[] movement = {-1, -1, -1, -1};
-		
-		mergeDownRows(numbers, movement);
-		Coord[] coords = movementCoords(movement, Direction.DOWN);
-		
-		System.out.println(Arrays.toString(numbers));
-		System.out.println(Arrays.toString(movement));
-		System.out.println(Arrays.toString(coords));
-	}
 }
