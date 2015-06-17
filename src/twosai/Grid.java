@@ -1,6 +1,9 @@
 package twosai;
 
-import activity2.*;
+import activity2.Direction;
+import activity2.TwosLogic;
+import activity2.GameView;
+import activity2.GameState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +24,7 @@ public class Grid implements Node {
 	}
 
 	public int getScore() {
-		int weightedScore = score + (int)(Math.log(score) * getNumZeros()) - getClusteringScore();
+		int weightedScore = score + (int)(Math.log(score) * getNumZeros());
 		return weightedScore;
 	}
 	
@@ -138,22 +141,22 @@ public class Grid implements Node {
 	}
 	
 	public void moveLeft() {
-		score += TwosLogic.mergeLeftRows(numbers);
+		score += TwosLogic.mergeLeftRows(numbers, null);
 		direction = Direction.LEFT;
 	}
 
 	public void moveRight() {
-		score += TwosLogic.mergeRightRows(numbers);
+		score += TwosLogic.mergeRightRows(numbers, null);
 		direction = Direction.RIGHT;
 	}
 	
 	public void moveUp() {
-		score += TwosLogic.mergeUpRows(numbers);
+		score += TwosLogic.mergeUpRows(numbers, null);
 		direction = Direction.UP;
 	}
 	
 	public void moveDown() {
-		score += TwosLogic.mergeDownRows(numbers);
+		score += TwosLogic.mergeDownRows(numbers, null);
 		direction = Direction.DOWN;
 	}
 	

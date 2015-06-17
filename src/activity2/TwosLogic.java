@@ -2,235 +2,256 @@ package activity2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class TwosLogic {
-	public static Number[][] swapRowsColumns(Number[][] numbers) {
-		Number[][] swapped = new Number[numbers[0].length][numbers.length];
+	public static int mergeLeft(int[] numbers, int[] movement, int from, int to) {
+		int i = from;
+		int score = 0;
 		
-		for(int row = 0; row < numbers.length; row++) {
-			for(int column = 0; column < numbers[0].length; column++) {
-				swapped[column][row] = numbers[row][column];
-			}
-		}
-		
-		return swapped;
-	}
-	
-	private static Number[] removeNullEntries(Number[] numbers) {
-		ArrayList<Number> noNulls = new ArrayList<Number>();
-		
-		for(Number number : numbers) {
-			if(number != null) {
-				noNulls.add(number);
-			}
-		}
-		
-		return noNulls.toArray(new Number[noNulls.size()]);
-	}
-	
-	public static Number[] reverse(Number[] numbers) {
-		List<Number> list = Arrays.asList(Arrays.copyOf(numbers, numbers.length));
-		
-		Collections.reverse(list);
-		
-		int length = numbers.length;
-		
-		for(Number number : list) {
-			if(number == null) continue;
+		for(int j = from + 1; j < to; j++) {
+			int n = numbers[i];
+			int m = numbers[j];
 			
-			number.setOriginalPosition(length - number.getOriginalPosition() - 1);
-			number.setFinalPosition(length - number.getFinalPosition() - 1);
-		}
-		
-		return list.toArray(new Number[length]);
-	}
-	
-	public static Number[] mergeLeft(Number[] original) {
-		for(int i = 0; i < original.length; i++) {
-			if(original[i] == null) continue;
-
-			original[i].setOriginalPosition(i);
-		}
-		
-		Number[] noNulls = removeNullEntries(original);
-		Number[] finalNumbers = new Number[original.length];
-		
-		int positionInFinal = 0;
-		
-		for(int i = 0; i < noNulls.length; i++) {
-			if(i != noNulls.length - 1 && noNulls[i].equals(noNulls[i + 1])) {
-				finalNumbers[positionInFinal] = new Number(noNulls[i].getValue() + noNulls[i + 1].getValue());
-				noNulls[i].setFinalPosition(positionInFinal);
-				noNulls[i + 1].setFinalPosition(positionInFinal);
+//			for(int k = 0; k < numbers.length; k++) {
+//				if(k == i) {
+//					System.out.print(">");
+//				}
+//				if(k == j) {
+//					System.out.print("^");
+//				}
+//				
+//				System.out.print(numbers[k] + " ");
+//			}
+//			System.out.println();
+			
+			if(m != 0 && n != m && n != 0) {
+				i++;
+				n = numbers[i];
+				
+				if(i == j) {
+					continue;
+				}
+			}
+			
+			if(m != 0 && m == n) {
+				score += 2 * m;
+				numbers[i] = 2 * m;
+				numbers[j] = 0;
+				
+				if(movement != null) {
+					movement[j] = i - from;
+				}
+				
 				i++;
 			}
-			else {
-				finalNumbers[positionInFinal] = new Number(noNulls[i].getValue());
-				noNulls[i].setFinalPosition(positionInFinal);
+			else if(m != 0 && n == 0) {
+				numbers[i] = m;
+				numbers[j] = 0;
+				
+				if(movement != null) {
+					movement[j] = i - from;
+				}
 			}
-			
-			positionInFinal++;
 		}
 		
-		return finalNumbers;
+		return score;
 	}
 	
-	public static Number[][] reverseAll(Number[][] numbers) {
-		Number[][] reversed = new Number[numbers.length][];
+	public static void reverse(int[] numbers, int from, int to) {
+		int end = (to - from) / 2;
 		
-		for(int row = 0; row < numbers.length; row++) {
-			reversed[row] = reverse(numbers[row]);
+		for(int i = 0; i < end; i++) {
+			int temp = numbers[from + i];
+			numbers[from + i] = numbers[to - i - 1];
+			numbers[to - i - 1] = temp;
+		}
+	}
+	
+	public static int mergeLeftRows(int[] numbers, int[] movement) {
+		int size = (int) Math.sqrt(numbers.length);
+		int score = 0;
+		
+		for(int i = 0; i < size; i++) {
+			score += mergeLeft(numbers, movement, i * size, i * size + size);
 		}
 		
-		return reversed;
+		return score;
 	}
 	
-	public static Number[][] mergeLeftAll(Number[][] numbers) {
-		Number[][] merged = new Number[numbers.length][];
-		
-		for(int row = 0; row < numbers.length; row++) {
-			merged[row] = mergeLeft(numbers[row]);
+	public static int mergeRightRows(int[] numbers, int[] movement) {
+		reverseRows(numbers);
+		if(movement != null) {
+			reverseRows(movement);
 		}
 		
-		return merged;
+		int score = mergeLeftRows(numbers, movement);
+		
+		reverseRows(numbers);
+		if(movement != null) {
+			reverseRows(movement);
+		}
+		
+		return score;
 	}
 	
-	public static String boardToString(Number[][] numbers) {
-		String string = "";
+	public static int mergeUpRows(int[] numbers, int[] movement) {
+		transpose(numbers);
+		if(movement != null) {
+			transpose(movement);
+		}
 
-		for(int row = 0; row < numbers.length; row++) {
-			for(int column = 0; column < numbers[0].length; column++) {
-				string += (numbers[row][column] == null ? "." : numbers[row][column]) + " ";
+		int score = mergeLeftRows(numbers, movement);
+
+		transpose(numbers);
+		if(movement != null) {
+			transpose(movement);
+		}
+		
+		return score;
+	}
+	
+	public static int mergeDownRows(int[] numbers, int[] movement) {
+		transpose(numbers);
+		if(movement != null) {
+			transpose(movement);
+		}
+
+		int score = mergeRightRows(numbers, movement);
+
+		transpose(numbers);
+		if(movement != null) {
+			transpose(movement);
+		}
+		
+		return score;
+	}
+	
+	public static boolean anyMovesPossible(int[] numbers) {
+		int[] shifted = clone(numbers);
+		mergeLeftRows(shifted, null);
+		if(!equals(numbers, shifted)) return true;
+		
+		copyFromTo(numbers, shifted);
+		mergeRightRows(shifted, null);
+		if(!equals(numbers, shifted)) return true;
+
+		copyFromTo(numbers, shifted);
+		mergeUpRows(shifted, null);
+		if(!equals(numbers, shifted)) return true;
+		
+		copyFromTo(numbers, shifted);
+		mergeDownRows(shifted, null);
+		if(!equals(numbers, shifted)) return true;
+		
+		return false;
+	}
+	
+	public static void reverseRows(int[] numbers) {
+		int size = (int) Math.sqrt(numbers.length);
+		
+		for(int i = 0; i < size; i++) {
+			reverse(numbers, i * size, i * size + size);
+		}
+	}
+	
+	public static void transpose(int[] numbers) {
+		int size = (int) Math.sqrt(numbers.length);
+		
+		for(int i = 0; i < size - 1; i++) {
+			for(int j = i + 1; j < size; j++) {
+				int m = i + j * size;
+				int n = j + i * size;
+				
+				int temp = numbers[m];
+				numbers[m] = numbers[n];
+				numbers[n] = temp;
 			}
+		}
+	}
+	
+	public static void addRandom(int[] numbers) {
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		
+		for(int i = 0; i < numbers.length; i++) {
+			if(numbers[i] == 0) {
+				indices.add(i);
+			}
+		}
+		
+		if(!indices.isEmpty()) {
+			int index = indices.get((int) (Math.random() * indices.size()));
 			
-			string += "\n";
+			numbers[index] = Math.random() < 0.9 ? 2 : 4;
+		}
+	}
+	
+	public static int[] clone(int[] numbers) {
+		return Arrays.copyOf(numbers, numbers.length);
+	}
+	
+	public static boolean equals(int[] first, int[] second) {
+		return Arrays.equals(first, second);
+	}
+	
+	public static void copyFromTo(int[] from, int[] to) {
+		for(int i = 0; i < from.length; i++) {
+			to[i] = from[i];
+		}
+	}
+
+	public static String toString(int[] numbers) {
+		int size = (int) Math.sqrt(numbers.length);
+		String string = "";
+		
+		for(int i = 0; i < numbers.length; i++) {
+			string += numbers[i] + " ";
+			
+			if(i % size == size - 1) {
+				string += "\n";
+			}
 		}
 		
 		return string;
 	}
 	
-	public static int[] boardToInts(Number[][] numbers) {
-		int[] out = new int[numbers.length * numbers[0].length];
+	public static Coord[] movementCoords(int[] movement, Direction direction) {
+		int size = (int) Math.sqrt(movement.length);
+		Coord[] coords = new Coord[movement.length];
 		
-		int i = 0;
-		
-		for(int row = 0; row < numbers.length; row++) {
-			for(int column = 0; column < numbers[0].length; column++) {
-				Number number = numbers[row][column];
-				
-				if(number == null) {
-					out[i] = 0;
-				}
-				else {
-					out[i] = number.getValue();
-				}
-				
-				i++;
+		for(int i = 0; i < movement.length; i++) {
+			int row = i / size;
+			int column = i % size;
+			int value = movement[i];
+			
+			if(value == -1) {
+				coords[i] = new Coord(row, column);
+			}
+			else if(direction == Direction.LEFT) {
+				coords[i] = new Coord(row, value);
+			}
+			else if(direction == Direction.RIGHT) {
+				coords[i] = new Coord(row, size - value - 1);
+			}
+			else if(direction == Direction.UP) {
+				coords[i] = new Coord(value, column);
+			}
+			else if(direction == Direction.DOWN) {
+				coords[i] = new Coord(size - value - 1, column);
 			}
 		}
 		
-		return out;
+		return coords;
 	}
 	
-	public static Number[][] addRandom(Number[][] numbers) {
-		int numNulls = 0;
+	public static void main(String[] args) {
+		int[] numbers = {2, 2, 2, 4};
+		int[] movement = {-1, -1, -1, -1};
 		
-		for(int row = 0; row < numbers.length; row++) {
-			for(int column = 0; column < numbers[0].length; column++) {
-				if(numbers[row][column] == null) {
-					numNulls++;
-				}
-			}
-		}
+		mergeDownRows(numbers, movement);
+		Coord[] coords = movementCoords(movement, Direction.DOWN);
 		
-		int i = 0;
-		
-		for(int row = 0; row < numbers.length; row++) {
-			for(int column = 0; column < numbers[0].length; column++) {
-				if(numbers[row][column] == null) {
-					if(((int) (Math.random() * numNulls)) == 0 || i == numNulls - 1) {
-						numbers[row][column] = new Number(2);
-						return numbers;
-					}
-					
-					i++;
-				}
-			}
-		}
-		
-		return numbers;
+		System.out.println(Arrays.toString(numbers));
+		System.out.println(Arrays.toString(movement));
+		System.out.println(Arrays.toString(coords));
 	}
-	
-	public static boolean equal(Number[][] first, Number[][] second) {
-		for(int row = 0; row < first.length; row++) {
-			for(int column = 0; column < first[0].length; column++) {
-				Number firstNumber = first[row][column];
-				Number secondNumber = second[row][column];
-				if(firstNumber != null && !firstNumber.equals(secondNumber)
-						|| firstNumber == null && secondNumber != null
-						|| firstNumber != null && secondNumber == null) {
-					return false;
-				}
-			}
-		}
-		
-		return true;
-	}
-	
-	public static Number[][] left(Number[][] numbers) {
-		return mergeLeftAll(numbers);
-	}
-	
-	public static Number[][] right(Number[][] numbers) {
-		return reverseAll(mergeLeftAll(reverseAll(numbers)));
-	}
-	
-	public static Number[][] up(Number[][] numbers) {
-		return swapRowsColumns(mergeLeftAll(swapRowsColumns(numbers)));
-	}
-	
-	public static Number[][] down(Number[][] numbers) {
-		return swapRowsColumns(reverseAll(mergeLeftAll(reverseAll(swapRowsColumns(numbers)))));
-	}
-	
-//	public static void main(String[] args) {
-////		Number[] numbers = new Number[] {
-////				new Number(2),
-////				new Number(4),
-////				new Number(4),
-////				new Number(16)
-////		};
-////		
-////		System.out.println(Arrays.toString(reverse(mergeLeft(reverse(numbers)))));
-////		
-////		Number[] reversed = reverse(numbers);
-////		
-////		for(Number number : reversed) {
-////			if(number == null) continue;
-////			
-////			System.out.println(number.getOriginalPosition() + " --> " + number.getFinalPosition());
-////		}
-//		
-//		Number[][] board = new Number[4][4];
-//		
-//		board[3][3] = new Number(2);
-//		board[3][0] = new Number(2);
-//		
-//		System.out.println("Initial");
-//		System.out.println(boardToString(board));
-//		
-//		System.out.println("Left");
-//		System.out.println(boardToString(mergeLeftAll(board)));
-//		
-//		System.out.println("Right");
-//		System.out.println(boardToString(reverseAll(mergeLeftAll(reverseAll(board)))));
-//		
-//		System.out.println("Up");
-//		System.out.println(boardToString(swapRowsColumns(mergeLeftAll(swapRowsColumns(board)))));
-//		
-//		System.out.println("Down");
-//		System.out.println(boardToString(swapRowsColumns(reverseAll(mergeLeftAll(reverseAll(swapRowsColumns(board)))))));
-//	}
 }

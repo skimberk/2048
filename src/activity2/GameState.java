@@ -1,59 +1,90 @@
 package activity2;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class GameState {
-	private Number[][] numbers;
+	private int[] numbers;
+	private int[] lastNumbers;
 	private boolean isLost;
+	private int score;
+	private Direction lastShift;
+	private Coord[] lastShiftCoords;
 	
-	private GameView view;
+	private ArrayList<StateChangeListener> listeners = new ArrayList<StateChangeListener>();
 	
-	public GameState(GameView view) {
-		this.view = view;
-		
+	public GameState() {
 		newGame();
+	}
+	
+	public void addStateListener(StateChangeListener listener) {
+		listeners.add(listener);
+		stateChanged();
+	}
+	
+	private void stateChanged() {
+		for(StateChangeListener listener : listeners) {
+			listener.stateChanged();
+		}
 	}
 	
 	public void shiftDirection(Direction direction) {
 		if(!isLost) {
-			view.setBottomLabel("Shifted tiles " + direction.toString().toLowerCase());
 			
-			Number[][] left = TwosLogic.left(numbers);
-			Number[][] right = TwosLogic.right(numbers);
-			Number[][] up = TwosLogic.up(numbers);
-			Number[][] down = TwosLogic.down(numbers);
-			
-			if(TwosLogic.equal(numbers, left) && TwosLogic.equal(numbers, right)
-					&& TwosLogic.equal(numbers, up) && TwosLogic.equal(numbers, down)) {
-				view.setBottomLabel("Game is lost!");
+			if(!TwosLogic.anyMovesPossible(numbers)) {
 				isLost = true;
+				
+				stateChanged();
 				return;
 			}
 			
-			Number[][] shifted = null;
+			int[] shifted = TwosLogic.clone(numbers);
+			int[] movement = new int[numbers.length];
+			Arrays.fill(movement, -1);
 			
 			if(direction == Direction.LEFT) {
-				shifted = left;
+				score += TwosLogic.mergeLeftRows(shifted, movement);
 			}
 			else if(direction == Direction.RIGHT) {
-				shifted = right;
+				score += TwosLogic.mergeRightRows(shifted, movement);
 			}
 			else if(direction == Direction.UP) {
-				shifted = up;
+				score += TwosLogic.mergeUpRows(shifted, movement);
 			}
 			else if(direction == Direction.DOWN) {
-				shifted = down;
+				score += TwosLogic.mergeDownRows(shifted, movement);
 			}
 			
-			if(shifted != null && !TwosLogic.equal(numbers, shifted)) {
-				numbers = TwosLogic.addRandom(shifted);
+			if(shifted != null && !TwosLogic.equals(numbers, shifted)) {
+				lastShift = direction;
+				lastShiftCoords = TwosLogic.movementCoords(movement, direction);
+				lastNumbers = numbers;
+				numbers = shifted;
+				TwosLogic.addRandom(numbers);
 				
-				int[] values = TwosLogic.boardToInts(numbers);
-				view.drawTiles(values);
+				stateChanged();
 			}
 		}
 	}
 	
 	public int[] getNumbers() {
-		return TwosLogic.boardToInts(numbers);
+		return numbers;
+	}
+	
+	public int[] getLastNumbers() {
+		return lastNumbers;
+	}
+	
+	public Direction getLastShift() {
+		return lastShift;
+	}
+	
+	public Coord[] getLastShiftCoords() {
+		return lastShiftCoords;
+	}
+	
+	public int getScore() {
+		return score;
 	}
 	
 	public boolean isLost() {
@@ -61,15 +92,16 @@ public class GameState {
 	}
 	
 	public void newGame() {
-		view.setBottomLabel("New game started");
 		isLost = false;
+		score = 0;
+		lastShift = null;
 		
-		numbers = new Number[4][4];
+		numbers = new int[4 * 4];
+		lastNumbers = new int[numbers.length];
 		
-		numbers[1][2] = new Number(2);
-		numbers[3][0] = new Number(2);
+		TwosLogic.addRandom(numbers);
+		TwosLogic.addRandom(numbers);
 		
-		int[] values = TwosLogic.boardToInts(numbers);
-		view.drawTiles(values);
+		stateChanged();
 	}
 }

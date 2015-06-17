@@ -1,10 +1,12 @@
 package activity2;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
-public class GameView extends JFrame implements StateChangeListener {
+public class GameViewAnimated extends JFrame implements StateChangeListener, AnimationFinishListener, ActionListener {
 	/**
 	 * 
 	 */
@@ -15,38 +17,23 @@ public class GameView extends JFrame implements StateChangeListener {
 	
 	private JPanel top;
 	private JPanel bottom;
-	private JPanel grid;
+	private Grid grid;
 	
 	private JLabel bottomLabel;
 	private JLabel scoreLabel;
 	private JLabel titleLabel;
 	
 	private JButton newGameButton;
-	
-	private final static Color[] colors = {
-			new Color(0xccc0b4),
-			new Color(0xEEE4DA),
-			new Color(0xede0c8),
-			new Color(0xf2b179),
-			new Color(0xf59563),
-			new Color(0xf67c5f),
-			new Color(0xf65e3b),
-			new Color(0xedcf72),
-			new Color(0xedcc61),
-			new Color(0xedc850),
-			new Color(0xedc53f),
-			new Color(0xedc22e),
-	};
 
-	public GameView() {
+	public GameViewAnimated() {
 		setLayout(new BoxLayout(this.getContentPane(), BoxLayout.PAGE_AXIS));
 		setTitle("Sebastian's Twos Game");
-		setSize(544, 672);
+		setSize(500, 648);
 		setResizable(false);
 		
 		top = new JPanel();
 		bottom = new JPanel();
-		grid = new JPanel();
+		grid = new Grid(4, 4, this);
 		
 		top.setPreferredSize(new Dimension(64, 64));
 		top.setLayout(new BorderLayout());
@@ -54,10 +41,7 @@ public class GameView extends JFrame implements StateChangeListener {
 		bottom.setPreferredSize(new Dimension(64, 64));
 		bottom.setLayout(new BorderLayout());
 		
-		grid.setLayout(new GridLayout(4, 4, 16, 16));
-		grid.setPreferredSize(new Dimension(512, 512));
 		grid.setBackground(new Color(0xbbada0));
-		grid.setBorder(BorderFactory.createLineBorder(new Color(0xbbada0), 16));
 		
 		newGameButton = new JButton("New game");
 		newGameButton.setFont(new Font("Helvetica Neue", Font.PLAIN, 24));
@@ -90,18 +74,10 @@ public class GameView extends JFrame implements StateChangeListener {
 		newGameButton.addActionListener(actionHandler);
 		newGameButton.addKeyListener(actionHandler);
 		
+		Timer timer = new Timer(20, this);
+		timer.start();
+		
 		setVisible(true);
-	}
-	
-	private void drawTiles(int[] values) {
-		grid.removeAll();
-		
-		for(int value : values) {
-			grid.add(createNumberLabel(value));
-		}
-		
-		grid.validate();
-		grid.repaint();
 	}
 	
 	private void setBottomLabel(String value) {
@@ -115,40 +91,6 @@ public class GameView extends JFrame implements StateChangeListener {
 	public GameState getGameState() {
 		return state;
 	}
-	
-	private static JLabel createNumberLabel(int number) {
-		JLabel label = new JLabel("" + (number == 0 ? "" : number), SwingConstants.CENTER);
-		
-		int fontSize = 55;
-		
-		if(number > 999) {
-			fontSize = 35;
-		}
-		else if(number > 99) {
-			fontSize = 45;
-		}
-		
-		Color fontColor = new Color(0x776E65);
-		
-		if(number >= 8) {
-			fontColor = new Color(0xf9f6f2);
-		}
-		
-		int colorIndex = (int) (Math.log(number) / Math.log(2));
-		
-		if(colorIndex < 0 || colorIndex >= colors.length) {
-			colorIndex = 0;
-		}
-		
-		Color backgroundColor = colors[colorIndex];
-		
-		label.setOpaque(true);
-		label.setBackground(backgroundColor);
-		label.setForeground(fontColor);
-		label.setFont(new Font("Helvetica Neue", Font.BOLD, fontSize));
-		
-		return label;
-	}
 
 	public void stateChanged() {
 		if(state.isLost()) {
@@ -161,9 +103,22 @@ public class GameView extends JFrame implements StateChangeListener {
 			setBottomLabel("Shifted tiles " + state.getLastShift().toString().toLowerCase());
 		}
 
-		drawTiles(state.getNumbers());
 		setScore(state.getScore());
 		
-		state.getLastShiftCoords();
+		if(state.getLastShiftCoords() == null) {
+			grid.setNumbers(state.getNumbers());
+		}
+		else {
+			grid.setNumbers(state.getLastNumbers());
+			grid.moveTo(state.getLastShiftCoords());
+		}
+	}
+
+	public void animationFinished() {
+		grid.setNumbers(state.getNumbers());
+	}
+
+	public void actionPerformed(ActionEvent e) {
+		grid.tick();
 	}
 }
